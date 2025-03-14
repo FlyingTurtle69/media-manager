@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Script to bulk move / hardlink files from one directory to another.
+Script to bulk move / symlink files from one directory to another.
 
 Usage:
     move.py [--move] <source prefix> <destination> [new suffix]
 
 Options:
-    --move Move files instead of hardlinking them.
+    --move Move files instead of symlinking them.
     <source prefix> The path up until the number of the file.
     <destination> The directory to move the files to. The new files will be named the name of the directory
                   without the (year) and adding S01E and the episode number.
@@ -26,7 +26,7 @@ These examples (only using E16) result in a structure like:
 """
 
 from sys import argv, exit
-from os import link, rename, listdir
+from os import symlink, rename, listdir
 from os.path import isfile
 
 
@@ -47,7 +47,7 @@ def main():
         argv.pop(1)
         move = rename
     else:
-        move = link
+        move = symlink
 
     dir, prefix = argv[1].rsplit('/', 1)
     plen = len(prefix)
@@ -64,15 +64,18 @@ def main():
              for f in listdir(dir)
              if f.startswith(prefix)]
 
-    if move is link:
-        print("These hardlinks will be created:")
+    if move is symlink:
+        if dest[0] != "/":
+            print(
+                "WARNING: Destination is not an absolute path. This will likely not work."
+            )
+        print("These symlinks will be created:")
     else:
         print("These files will be MOVED:")
 
     for f, p in files:
         extra = ""
         if isfile(p):
-            # NOTE: I think this will just fail for hardlinking
             extra = " (overwriting)"
         print(f"{f} -> {p}{extra}")
 
