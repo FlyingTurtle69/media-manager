@@ -3,20 +3,18 @@
 Script to bulk move / hardlink files from one directory to another.
 
 Usage:
-    move.py [--move] <source prefix> <destination> [count] [new suffix]
+    move.py [--move] <source prefix> <destination> [new suffix]
 
 Options:
     --move Move files instead of hardlinking them.
     <source prefix> The path up until the number of the file.
     <destination> The directory to move the files to. The new files will be named the name of the directory
                   without the (year) and adding S01E and the episode number.
-    [count] The number of files to move as a range start-end. If a number is given instead, it will be 1-end.
-            It's assumed that the numbers are two digit such as 05 and 12.
     [new suffix] The new file extension to use instead of the old one. If not given, the old one will be used.
 
 Example:
-    move.py "Downloads/Kamen Rider OOO/[OZC-Live]Kamen Rider OOO BD Box E" 46 "テレビ番組/仮面ライダーオーズ (2010)"
-    move.py --move "Downloads/Kamen Rider OOO/Kamen Rider OOO 0" 16-48 "テレビ番組/仮面ライダーオーズ (2010)" "ja.srt"
+    move.py "Downloads/Kamen Rider OOO/[OZC-Live]Kamen Rider OOO BD Box E" "テレビ番組/仮面ライダーオーズ (2010)"
+    move.py --move "Downloads/Kamen Rider OOO/Kamen Rider OOO 0" "テレビ番組/仮面ライダーオーズ (2010)" "ja.srt"
 
 These examples (only using E16) result in a structure like:
     Downloads/
@@ -29,6 +27,15 @@ These examples (only using E16) result in a structure like:
 
 from sys import argv, exit
 from os import link, rename, listdir
+from os.path import isfile
+
+
+def new_path(f: str, dest: str, plen: int, suffix: str) -> str:
+    if suffix == "":
+        suffix = f.rsplit(".", 1)[1]
+    num = f[plen:plen + 2]
+    name = dest.rsplit("(", 1)[0]
+    return f"{dest}/{name}S01E{num}.{suffix}"
 
 
 def main():
@@ -45,10 +52,37 @@ def main():
     dir, prefix = argv[1].rsplit('/', 1)
     plen = len(prefix)
 
-    froms = [
-        f for f in listdir(dir)
-        if f.startswith(prefix) and int(f[plen:plen + 2])
-    ]
+    dest = argv[2]
+    if dest[-1] == '/':
+        dest = dest[:-1]
+
+    suffix = ""
+    if len(argv) > 3:
+        suffix = argv[3]
+
+    files = [(dir + "/" + f, new_path(f, dest, plen, suffix))
+             for f in listdir(dir)
+             if f.startswith(prefix)]
+
+    if move is link:
+        print("These hardlinks will be created:")
+    else:
+        print("These files will be MOVED:")
+
+    for f, p in files:
+        extra = ""
+        if isfile(p):
+            # NOTE: I think this will just fail for hardlinking
+            extra = " (overwriting)"
+        print(f"{f} -> {p}{extra}")
+
+    if input("Continue? (y/n) ").lower() == 'y':
+        for f, p in files:
+            move(f, p)
+        print("Finished.")
+    else:
+        print("Aborted.")
+        exit(2)
 
 
 if __name__ == '__main__':
