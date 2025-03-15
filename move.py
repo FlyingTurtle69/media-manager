@@ -26,15 +26,15 @@ These examples (only using E16) result in a structure like:
 """
 
 from sys import argv, exit
-from os import symlink, rename, listdir
-from os.path import isfile
+from os import symlink, rename, listdir, mkdir
+from os.path import isfile, isdir
 
 
 def new_path(f: str, dest: str, plen: int, suffix: str) -> str:
     if suffix == "":
         suffix = f.rsplit(".", 1)[1]
     num = f[plen:plen + 2]
-    name = dest.rsplit("(", 1)[0]
+    name = dest.rsplit("/", 1)[1].rsplit("(", 1)[0]
     return f"{dest}/{name}S01E{num}.{suffix}"
 
 
@@ -65,9 +65,9 @@ def main():
              if f.startswith(prefix)]
 
     if move is symlink:
-        if dest[0] != "/":
+        if dir[0] != "/":
             print(
-                "WARNING: Destination is not an absolute path. This will likely not work."
+                "WARNING: Source is not an absolute path. This will likely not work."
             )
         print("These symlinks will be created:")
     else:
@@ -79,7 +79,12 @@ def main():
             extra = " (overwriting)"
         print(f"{f} -> {p}{extra}")
 
+    if not isdir(dest):
+        print(f"This directory will be created: {dest}")
+
     if input("Continue? (y/n) ").lower() == 'y':
+        if not isdir(dest):
+            mkdir(dest)
         for f, p in files:
             move(f, p)
         print("Finished.")
