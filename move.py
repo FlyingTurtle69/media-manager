@@ -88,10 +88,14 @@ def main():
 
     if not isdir(dest):
         print(f"This directory will be created: {dest}")
+    if not isdir(dest + f"/Season {season:02}"):
+        print(f"This directory will be created: {dest}/Season 01")
 
     if input("Continue? (y/n) ").lower() == 'y':
         if not isdir(dest):
             mkdir(dest)
+        if not isdir(dest + f"/Season {season:02}"):
+            mkdir(dest + f"/Season {season:02}")
         for f, p in files:
             mv(f, p)
         print("Finished.")
