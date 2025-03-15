@@ -3,7 +3,7 @@
 Script to bulk move / symlink files from one directory to another.
 
 Usage:
-    move.py [--move] <source prefix> <destination> [new suffix]
+    move.py [--move] <source prefix> <destination> [new suffix] [season]
 
 Options:
     --move Move files instead of symlinking them.
@@ -11,6 +11,7 @@ Options:
     <destination> The directory to move the files to. The new files will be named the name of the directory
                   without the (year) and adding S01E and the episode number.
     [new suffix] The new file extension to use instead of the old one. If not given, the old one will be used.
+    [season] The season number to use. If not given, the default is 1.
 
 Example:
     move.py "Downloads/Kamen Rider OOO/[OZC-Live]Kamen Rider OOO BD Box E" "テレビ番組/仮面ライダーオーズ (2010)"
@@ -21,9 +22,10 @@ These examples (only using E16) result in a structure like:
         [OZC-Live]Kamen Rider OOO BD Box E16 'A Conclusion, a Greed, and a New Rider' [720p].mkv
     テレビ番組/
         仮面ライダーオーズ (2010)/
-            仮面ライダーオーズ S01E16.mkv
-            仮面ライダーオーズ S01E16.ja.srt
-"""
+            Season 01/
+                仮面ライダーオーズ S01E16.mkv
+                仮面ライダーオーズ S01E16.ja.srt
+    """
 
 from sys import argv, exit
 from os import symlink, listdir, mkdir
@@ -31,12 +33,14 @@ from os.path import isfile, isdir
 from shutil import move
 
 
-def new_path(f: str, dest: str, plen: int, suffix: str) -> str:
+def new_path(f: str, dest: str, plen: int, suffix: str, season: int) -> str:
     if suffix == "":
         suffix = f.rsplit(".", 1)[1]
     num = f[plen:plen + 2]
     name = dest.rsplit("/", 1)[1].rsplit("(", 1)[0]
-    return f"{dest}/{name}S01E{num}.{suffix}"
+    s = f"{season:02}"
+    season_folder = f"Season {s}/"
+    return f"{dest}/{season_folder}{name}S{s}E{num}.{suffix}"
 
 
 def main():
@@ -61,7 +65,9 @@ def main():
     if len(argv) > 3:
         suffix = argv[3]
 
-    files = [(dir + "/" + f, new_path(f, dest, plen, suffix))
+    season = int(argv[4]) if len(argv) > 4 else 1
+
+    files = [(dir + "/" + f, new_path(f, dest, plen, suffix, season))
              for f in listdir(dir)
              if f.startswith(prefix)]
 
