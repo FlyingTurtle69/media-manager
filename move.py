@@ -26,8 +26,9 @@ These examples (only using E16) result in a structure like:
 """
 
 from sys import argv, exit
-from os import symlink, rename, listdir, mkdir
+from os import symlink, listdir, mkdir
 from os.path import isfile, isdir
+from shutil import move
 
 
 def new_path(f: str, dest: str, plen: int, suffix: str) -> str:
@@ -45,9 +46,9 @@ def main():
 
     if argv[1] == '--move':
         argv.pop(1)
-        move = rename
+        mv = move
     else:
-        move = symlink
+        mv = symlink
 
     dir, prefix = argv[1].rsplit('/', 1)
     plen = len(prefix)
@@ -64,7 +65,7 @@ def main():
              for f in listdir(dir)
              if f.startswith(prefix)]
 
-    if move is symlink:
+    if mv is symlink:
         if dir[0] != "/":
             print(
                 "WARNING: Source is not an absolute path. This will likely not work."
@@ -86,7 +87,7 @@ def main():
         if not isdir(dest):
             mkdir(dest)
         for f, p in files:
-            move(f, p)
+            mv(f, p)
         print("Finished.")
     else:
         print("Aborted.")
