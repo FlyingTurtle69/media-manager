@@ -98,8 +98,8 @@ def main():
 
     if not isdir(dest):
         print(f"This directory will be created: {dest}")
-    if not isdir(dest + f"/Season {season:02}"):
-        print(f"This directory will be created: {dest}/Season 01")
+    if not isdir(season_path(dest, season)):
+        print(f"This directory will be created: {season_path(dest, season)}")
 
     if input("Continue? (y/n) ").lower() == 'y':
         if not isdir(dest):
