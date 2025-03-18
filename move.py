@@ -3,19 +3,20 @@
 Script to bulk move / symlink files from one directory to another.
 
 Usage:
-    move.py [--move] <source prefix> <destination> [new suffix] [season]
+    move.py [--move] <source prefix> <destination> [--suffix suffix] [--season season] [--ignore words]
 
 Options:
     --move Move files instead of symlinking them.
     <source prefix> The path up until the number of the file.
     <destination> The directory to move the files to. The new files will be named the name of the directory
                   without the (year) and adding S01E and the episode number.
-    [new suffix] The new file extension to use instead of the old one. If not given, the old one will be used.
+    [suffix] The new file extension to use instead of the old one. If not given, the old one will be used.
     [season] The season number to use. If not given, the default is 1.
+    [words] A comma-separated list of words. Any files that contain any of these words will be ignored.
 
 Example:
     move.py "Downloads/Kamen Rider OOO/[OZC-Live]Kamen Rider OOO BD Box E" "テレビ番組/仮面ライダーオーズ (2010)"
-    move.py --move "Downloads/Kamen Rider OOO/Kamen Rider OOO 0" "テレビ番組/仮面ライダーオーズ (2010)" "ja.srt"
+    move.py --move "Downloads/Kamen Rider OOO/Kamen Rider OOO 0" "テレビ番組/仮面ライダーオーズ (2010)" --suffix "ja.srt"
 
 These examples (only using E16) result in a structure like:
     Downloads/
@@ -62,14 +63,20 @@ def main():
         dest = dest[:-1]
 
     suffix = ""
-    if len(argv) > 3:
-        suffix = argv[3]
+    season = 1
+    ignore = []
 
-    season = int(argv[4]) if len(argv) > 4 else 1
+    for i in range(3, len(argv), 2):
+        if argv[i] == "--suffix":
+            suffix = argv[i + 1]
+        elif argv[i] == "--season":
+            season = int(argv[i + 1])
+        elif argv[i] == "--ignore":
+            ignore = argv[i + 1].split(',')
 
     files = [(dir + "/" + f, new_path(f, dest, plen, suffix, season))
              for f in listdir(dir)
-             if f.startswith(prefix)]
+             if all(i not in f for i in ignore) and f.startswith(prefix)]
 
     if mv is symlink:
         if dir[0] != "/":
