@@ -34,14 +34,17 @@ from os.path import isfile, isdir
 from shutil import move
 
 
+def season_path(dest: str, season: int) -> str:
+    return f"{dest}/Season {season:02}"
+
+
 def new_path(f: str, dest: str, plen: int, suffix: str, season: int) -> str:
     if suffix == "":
         suffix = f.rsplit(".", 1)[1]
     num = f[plen:plen + 2]
     name = dest.rsplit("/", 1)[1].rsplit("(", 1)[0]
     s = f"{season:02}"
-    season_folder = f"Season {s}/"
-    return f"{dest}/{season_folder}{name}S{s}E{num}.{suffix}"
+    return f"{season_path(dest, season)}{name}S{s}E{num}.{suffix}"
 
 
 def main():
@@ -101,8 +104,8 @@ def main():
     if input("Continue? (y/n) ").lower() == 'y':
         if not isdir(dest):
             mkdir(dest)
-        if not isdir(dest + f"/Season {season:02}"):
-            mkdir(dest + f"/Season {season:02}")
+        if not isdir(season_path(dest, season)):
+            mkdir(season_path(dest, season))
         for f, p in files:
             mv(f, p)
         print("Finished.")
