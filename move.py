@@ -44,7 +44,7 @@ def new_path(f: str, dest: str, plen: int, suffix: str, season: int) -> str:
     num = f[plen:plen + 2]
     name = dest.rsplit("/", 1)[1].rsplit("(", 1)[0]
     s = f"{season:02}"
-    return f"{season_path(dest, season)}{name}S{s}E{num}.{suffix}"
+    return f"{season_path(dest, season)}/{name}S{s}E{num}.{suffix}"
 
 
 def main():
