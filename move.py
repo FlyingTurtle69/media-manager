@@ -45,7 +45,7 @@ def new_path(f: str, dest: str, plen: int, suffix: str, season: int) -> str:
         suffix = f.rsplit(".", 1)[1]
     num = f[plen:plen + 2]
     name = dest.rsplit("/", 1)[1].rsplit("(", 1)[0]
-    s = f"{season:02}"
+    s = f"{abs(season):02}"
     return f"{season_path(dest, season)}/{name}S{s}E{num}.{suffix}"
 
 
@@ -91,7 +91,7 @@ def main():
             )
         print("These symlinks will be created:")
     else:
-        print("These files will be MOVED:")
+        print(f"{len(files)} files will be MOVED:")
 
     for f, p in files:
         extra = ""
