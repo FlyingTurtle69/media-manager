@@ -11,7 +11,7 @@ Options:
     <destination> The directory to move the files to. The new files will be named the name of the directory
                   without the (year) and adding S01E and the episode number.
     [suffix] The new file extension to use instead of the old one. If not given, the old one will be used.
-    [season] The season number to use. If not given, the default is 1.
+    [season] The season number to use. If not given, the default is 1. If "none" is given, no season dir will be created.
     [words] A comma-separated list of words. Any files that contain any of these words will be ignored.
 
 Example:
@@ -35,6 +35,8 @@ from shutil import move
 
 
 def season_path(dest: str, season: int) -> str:
+    if season == -1:
+        return dest
     return f"{dest}/Season {season:02}"
 
 
@@ -73,7 +75,8 @@ def main():
         if argv[i] == "--suffix":
             suffix = argv[i + 1]
         elif argv[i] == "--season":
-            season = int(argv[i + 1])
+            n = argv[i + 1]
+            season = -1 if n == "none" else int(n)
         elif argv[i] == "--ignore":
             ignore = argv[i + 1].split(',')
 
