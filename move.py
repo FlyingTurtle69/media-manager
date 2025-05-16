@@ -89,7 +89,7 @@ def main():
             print(
                 "WARNING: Source is not an absolute path. This will likely not work."
             )
-        print("These symlinks will be created:")
+        print(f"{len(files)} symlinks will be created:")
     else:
         print(f"{len(files)} files will be MOVED:")
 
