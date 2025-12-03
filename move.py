@@ -26,7 +26,7 @@ These examples (only using E16) result in a structure like:
             Season 01/
                 仮面ライダーオーズ S01E16.mkv
                 仮面ライダーオーズ S01E16.ja.srt
-    """
+"""
 
 from sys import argv, exit
 from os import symlink, listdir, mkdir
@@ -43,7 +43,7 @@ def season_path(dest: str, season: int) -> str:
 def new_path(f: str, dest: str, plen: int, suffix: str, season: int) -> str:
     if suffix == "":
         suffix = f.rsplit(".", 1)[1]
-    num = f[plen:plen + 2]
+    num = f[plen : plen + 2]
     name = dest.rsplit("/", 1)[1].rsplit("(", 1)[0]
     s = f"{abs(season):02}"
     return f"{season_path(dest, season)}/{name}S{s}E{num}.{suffix}"
@@ -54,17 +54,17 @@ def main():
         print(__doc__)
         exit(1)
 
-    if argv[1] == '--move':
+    if argv[1] == "--move":
         argv.pop(1)
         mv = move
     else:
         mv = symlink
 
-    dir, prefix = argv[1].rsplit('/', 1)
+    dir, prefix = argv[1].rsplit("/", 1)
     plen = len(prefix)
 
     dest = argv[2]
-    if dest[-1] == '/':
+    if dest[-1] == "/":
         dest = dest[:-1]
 
     suffix = ""
@@ -78,17 +78,17 @@ def main():
             n = argv[i + 1]
             season = -1 if n == "none" else int(n)
         elif argv[i] == "--ignore":
-            ignore = argv[i + 1].split(',')
+            ignore = argv[i + 1].split(",")
 
-    files = [(dir + "/" + f, new_path(f, dest, plen, suffix, season))
-             for f in listdir(dir)
-             if all(i not in f for i in ignore) and f.startswith(prefix)]
+    files = [
+        (dir + "/" + f, new_path(f, dest, plen, suffix, season))
+        for f in listdir(dir)
+        if all(i not in f for i in ignore) and f.startswith(prefix)
+    ]
 
     if mv is symlink:
         if dir[0] != "/":
-            print(
-                "WARNING: Source is not an absolute path. This will likely not work."
-            )
+            print("WARNING: Source is not an absolute path. This will likely not work.")
         print(f"{len(files)} symlinks will be created:")
     else:
         print(f"{len(files)} files will be MOVED:")
@@ -104,7 +104,7 @@ def main():
     if not isdir(season_path(dest, season)):
         print(f"This directory will be created: {season_path(dest, season)}")
 
-    if input("Continue? (y/n) ").lower() == 'y':
+    if input("Continue? (y/n) ").lower() == "y":
         if not isdir(dest):
             mkdir(dest)
         if not isdir(season_path(dest, season)):
@@ -117,5 +117,5 @@ def main():
         exit(2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
