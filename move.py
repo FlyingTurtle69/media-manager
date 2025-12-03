@@ -3,7 +3,7 @@
 Script to bulk move / symlink files from one directory to another.
 
 Usage:
-    move.py [--move] <source prefix> <destination> [--suffix suffix] [--season season] [--ignore words]
+    move.py [--move] <source prefix> <destination> [--suffix suffix] [--season season] [--ignore words] [--shift shift]
 
 Options:
     --move Move files instead of symlinking them.
@@ -13,6 +13,7 @@ Options:
     [suffix] The new file extension to use instead of the old one. If not given, the old one will be used.
     [season] The season number to use. If not given, the default is 1. If "none" is given, no season dir will be created.
     [words] A comma-separated list of words. Any files that contain any of these words will be ignored.
+    [shift] An integer to add to the episode numbers. Can be negative.
 
 Example:
     move.py "Downloads/Kamen Rider OOO/[OZC-Live]Kamen Rider OOO BD Box E" "テレビ番組/仮面ライダーオーズ (2010)"
@@ -40,10 +41,10 @@ def season_path(dest: str, season: int) -> str:
     return f"{dest}/Season {season:02}"
 
 
-def new_path(f: str, dest: str, plen: int, suffix: str, season: int) -> str:
+def new_path(f: str, dest: str, plen: int, suffix: str, season: int, shift: int) -> str:
     if suffix == "":
         suffix = f.rsplit(".", 1)[1]
-    num = f[plen : plen + 2]
+    num = f"{int(f[plen : plen + 2]) + shift:02}"
     name = dest.rsplit("/", 1)[1].rsplit("(", 1)[0]
     s = f"{abs(season):02}"
     return f"{season_path(dest, season)}/{name}S{s}E{num}.{suffix}"
@@ -70,6 +71,7 @@ def main():
     suffix = ""
     season = 1
     ignore = []
+    shift = 0
 
     for i in range(3, len(argv), 2):
         if argv[i] == "--suffix":
@@ -79,9 +81,16 @@ def main():
             season = -1 if n == "none" else int(n)
         elif argv[i] == "--ignore":
             ignore = argv[i + 1].split(",")
+        elif argv[i] == "--shift":
+            shift = int(argv[i + 1])
+            if shift != 0:
+                print(f"Shifting episode numbers by {shift}.")
+        else:
+            print(f"Unknown argument: {argv[i]}")
+            exit(1)
 
     files = [
-        (dir + "/" + f, new_path(f, dest, plen, suffix, season))
+        (dir + "/" + f, new_path(f, dest, plen, suffix, season, shift))
         for f in listdir(dir)
         if all(i not in f for i in ignore) and f.startswith(prefix)
     ]
