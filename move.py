@@ -63,7 +63,8 @@ def main():
     else:
         mv = symlink
 
-    destination = argv[1]
+    dir, prefix = argv[1].rsplit("/", 1)
+    plen = len(prefix)
 
     dest = argv[2]
     if dest[-1] == "/":
@@ -91,13 +92,10 @@ def main():
             if search_type not in ["movie", "tv"]:
                 print(f"Invalid search type: {search_type}")
                 exit(1)
-            destination = search_to_destination(dest, search_type)  # type: ignore
+            dest = search_to_destination(dest, search_type)  # type: ignore
         else:
             print(f"Unknown argument: {argv[i]}")
             exit(1)
-
-    dir, prefix = destination.rsplit("/", 1)
-    plen = len(prefix)
 
     files = [
         (dir + "/" + f, new_path(f, dest, plen, suffix, season, shift))
