@@ -3,7 +3,7 @@
 Script to bulk move / symlink files from one directory to another.
 
 Usage:
-    move.py [--move] <source prefix> <destination> [--suffix suffix] [--season season] [--ignore words] [--shift shift]
+    move.py [--move] <source prefix> <destination> [--suffix suffix] [--season season] [--ignore words] [--shift shift] [--search type]
 
 Options:
     --move Move files instead of symlinking them.
@@ -14,6 +14,7 @@ Options:
     [season] The season number to use. If not given, the default is 1. If "none" is given, no season dir will be created.
     [words] A comma-separated list of words. Any files that contain any of these words will be ignored.
     [shift] An integer to add to the episode numbers. Can be negative.
+    [type] Either "movie" or "tv". If given, the destination will be searched for using TMDB.
 
 Example:
     move.py "Downloads/Kamen Rider OOO/[OZC-Live]Kamen Rider OOO BD Box E" "テレビ番組/仮面ライダーオーズ (2010)"
@@ -33,6 +34,7 @@ from sys import argv, exit
 from os import symlink, listdir, mkdir
 from os.path import isfile, isdir
 from shutil import move
+from search import search_to_destination
 
 
 def season_path(dest: str, season: int) -> str:
@@ -61,8 +63,7 @@ def main():
     else:
         mv = symlink
 
-    dir, prefix = argv[1].rsplit("/", 1)
-    plen = len(prefix)
+    destination = argv[1]
 
     dest = argv[2]
     if dest[-1] == "/":
@@ -85,9 +86,18 @@ def main():
             shift = int(argv[i + 1])
             if shift != 0:
                 print(f"Shifting episode numbers by {shift}.")
+        elif argv[i] == "--search":
+            search_type = argv[i + 1]
+            if search_type not in ["movie", "tv"]:
+                print(f"Invalid search type: {search_type}")
+                exit(1)
+            destination = search_to_destination(dest, search_type)  # type: ignore
         else:
             print(f"Unknown argument: {argv[i]}")
             exit(1)
+
+    dir, prefix = destination.rsplit("/", 1)
+    plen = len(prefix)
 
     files = [
         (dir + "/" + f, new_path(f, dest, plen, suffix, season, shift))
