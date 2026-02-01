@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Script to bulk move / symlink files from one directory to another.
+Note: This is deprecated in favour of using main.py
 
 Usage:
     move.py [--move] <source prefix> <destination> [--suffix suffix] [--season season] [--ignore words] [--shift shift] [--search type]

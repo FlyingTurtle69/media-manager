@@ -1,17 +1,20 @@
 from typing import Literal
-from dotenv import load_dotenv
-from os import getenv
+from pydantic import BaseModel
 import tmdbsimple as tmdb
+from utils import get_env
 
-load_dotenv()
-tmdb.API_KEY = getenv("TMDB_API_KEY")
-MOVIE_PATH = getenv("MOVIE_PATH")
-TV_PATH = getenv("TV_PATH")
+tmdb.API_KEY = get_env("TMDB_API_KEY")
+MOVIE_PATH = get_env("MOVIE_PATH")
+TV_PATH = get_env("TV_PATH")
 
 SearchType = Literal["movie", "tv"]
 
+class Media(BaseModel):
+    id: int
+    title: str
+    release_date: str
 
-def search_to_destination(query: str, search_type: SearchType) -> str:
+def search_media(query: str, search_type: SearchType) -> Media:
     search = tmdb.Search()
     if search_type == "movie":
         response = search.movie(query=query)["results"]
@@ -24,7 +27,9 @@ def search_to_destination(query: str, search_type: SearchType) -> str:
     for i, movie in enumerate(response):
         print(f"{i}: {movie['title']} ({movie['release_date'][:4]})")
     choice = int(input("Enter number: "))
-    media = response[choice]
+    return Media(**response[choice])
 
+def search_to_destination(query: str, search_type: SearchType) -> str:
+    media = search_media(query, search_type)
     folder = MOVIE_PATH if search_type == "movie" else TV_PATH
-    return f"{folder}/{media["title"]} ({media["release_date"][:4]}) [tmdbid-{media['id']}]"
+    return f"{folder}/{media.title} ({media.release_date[:4]}) [tmdbid-{media.id}]"
