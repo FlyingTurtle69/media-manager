@@ -27,6 +27,9 @@ MOVIE_PATH = get_env("MOVIE_PATH")
 TV_PATH = get_env("TV_PATH")
 DOWNLOADS_PATH = get_env("DOWNLOADS_PATH")
 
+SUBTITLE_SUFFIXES = ["srt", "ass"]
+LANGUAGE_SUFFIX = "ja"
+
 
 def find_source(name: str, media_type: SearchType, folder=DOWNLOADS_PATH) -> str:
     files = listdir(folder)
@@ -47,10 +50,17 @@ def find_source(name: str, media_type: SearchType, folder=DOWNLOADS_PATH) -> str
     exit(1)
 
 
+def make_suffix(source: str) -> str:
+    suffix = source.rsplit(".", 1)[1]
+    if suffix in SUBTITLE_SUFFIXES:
+        return f"{LANGUAGE_SUFFIX}.{suffix}"
+    return suffix
+
+
 def episode_path(
     source: str, dest_folder: str, media_title: str, season: int, episode: int
 ) -> tuple[str, str]:
-    suffix = source.rsplit(".", 1)[1]
+    suffix = make_suffix(source)
     return (
         source,
         f"{dest_folder}/{media_title} S{season:02}E{episode:02}.{suffix}",
@@ -113,7 +123,7 @@ def main():
     print()
 
     if media_type == "movie":
-        suffix = source.rsplit(".", 1)[1]
+        suffix = make_suffix(source)
         from_to = [
             (
                 source,
