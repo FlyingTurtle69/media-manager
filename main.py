@@ -43,6 +43,7 @@ def find_source(name: str, media_type: SearchType, folder=DOWNLOADS_PATH) -> str
                 return find_source(name, media_type, f"{folder}/{file}")
             return f"{folder}/{file}"
 
+    print("Source not found")
     exit(1)
 
 
@@ -61,7 +62,7 @@ def folder_episodes(
 ) -> list[tuple[str, str]]:
     files = listdir(source_folder)
     from_to = []
-    regex = re.compile(r"(?:E|\[)(\d{2})\]?")
+    regex = re.compile(r"(?:E|\[| )(\d{2})(\]| )?")
     for file in files:
         match = regex.search(file)
         if match:
@@ -100,9 +101,13 @@ def main():
             season = int(argv[i + 1])
         elif argv[i] == "--episode":
             episode = int(argv[i + 1])
+        else:
+            print(f"Unknown option: {argv[i]}")
+            exit(1)
 
     if source is None:
         source = find_source(name, media_type)
+        print("Source: ", source)
 
     media = search_media(name, media_type)
     print()
