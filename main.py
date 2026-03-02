@@ -22,6 +22,7 @@ from pathlib import Path
 from sys import argv
 from search import search_media, SearchType
 from utils import get_env
+from tqdm import tqdm
 
 MOVIE_PATH = get_env("MOVIE_PATH")
 TV_PATH = get_env("TV_PATH")
@@ -74,11 +75,11 @@ def folder_episodes(
 ) -> list[tuple[str, str]]:
     files = listdir(source_folder)
     from_to = []
-    regex = re.compile(r"(?:E|\[| )(\d{2})(\]| )?")
+    regex = re.compile(r"(?:E(\d{2})|\[(\d{2})\]| (\d{2}) )")
     for file in files:
         match = regex.search(file)
         if match:
-            episode = int(match.group(1))
+            episode = int(next(g for g in match.groups() if g is not None))
             path = episode_path(
                 f"{source_folder}/{file}",
                 dest_folder,
@@ -159,7 +160,7 @@ def main():
         print(f"{fro} -> {to}{extra}")
 
     if input("\nContinue? (y/n) ").lower() == "y":
-        for fro, to in from_to:
+        for fro, to in tqdm(from_to):
             src = Path(fro)
             dst = Path(to)
             dst.parent.mkdir(parents=True, exist_ok=True)
