@@ -30,6 +30,8 @@ DOWNLOADS_PATH = get_env("DOWNLOADS_PATH")
 SUBTITLE_SUFFIXES = ["srt", "ass"]
 LANGUAGE_SUFFIX = "ja"
 
+REPLACE_CHAR = ""
+
 
 def find_source(name: str, media_type: SearchType, folder=DOWNLOADS_PATH) -> str:
     files = listdir(folder)
@@ -120,6 +122,10 @@ def main():
         print("Source: ", source)
 
     media = search_media(name, media_type)
+
+    # Handle : since it's not allowed in file names
+    media.title = media.title.replace(":", REPLACE_CHAR)
+
     print()
 
     if media_type == "movie":
