@@ -8,6 +8,7 @@ Options:
   --source: The path to the original folder or file
   --season: The season number to copy to
   --episode: The specific episode number to copy to
+  --shift: An integer to add to episode numbers (default: 0)
 
 Example:
     main.py tv "Violet Evergarden"
@@ -78,7 +79,7 @@ def episode_path(
 
 
 def folder_episodes(
-    source_folder: str, dest_folder: str, media_title: str, season: int
+    source_folder: str, dest_folder: str, media_title: str, season: int, shift: int = 0
 ) -> list[tuple[str, str]]:
     files = listdir(source_folder)
     from_to = []
@@ -86,7 +87,7 @@ def folder_episodes(
     for file in files:
         match = regex.search(file)
         if match:
-            episode = int(next(g for g in match.groups() if g is not None))
+            episode = int(next(g for g in match.groups() if g is not None)) + shift
             path = episode_path(
                 f"{source_folder}/{file}",
                 dest_folder,
@@ -126,6 +127,7 @@ def main():
     source = None
     season = 1
     episode = None
+    shift = 0
 
     for i in range(3, len(argv), 2):
         if argv[i] == "--source":
@@ -134,6 +136,8 @@ def main():
             season = int(argv[i + 1])
         elif argv[i] == "--episode":
             episode = int(argv[i + 1])
+        elif argv[i] == "--shift":
+            shift = int(argv[i + 1])
         else:
             print(f"Unknown option: {argv[i]}")
             exit(1)
@@ -170,7 +174,7 @@ def main():
         if episode is not None:
             from_to = [episode_path(source, dest_path, media.title, season, episode)]
         else:
-            from_to = folder_episodes(source, dest_path, media.title, season)
+            from_to = folder_episodes(source, dest_path, media.title, season, shift)
 
     print(f"{len(from_to)} files to be copied:")
     for fro, to in from_to:
