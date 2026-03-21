@@ -20,7 +20,7 @@ from os import listdir
 from os.path import isdir, isfile
 from pathlib import Path
 from sys import argv
-from search import search_media, SearchType
+from search import Media, search_media, SearchType
 from utils import get_env
 from tqdm import tqdm
 
@@ -34,20 +34,27 @@ LANGUAGE_SUFFIX = "ja"
 REPLACE_CHAR = ""
 
 
+def find_match(name: str, folder: str) -> str | None:
+    for file in listdir(folder):
+        if (
+            name.lower() in file.lower()
+            or name.lower().replace(" ", ".") in file.lower()
+        ):
+            return file
+    return None
+
+
 def find_source(name: str, media_type: SearchType, folder=DOWNLOADS_PATH) -> str:
     files = listdir(folder)
 
     if len(files) == 1:
         return f"{folder}/{files[0]}"
 
-    for file in files:
-        if (
-            name.lower() in file.lower()
-            or name.lower().replace(" ", ".") in file.lower()
-        ):
-            if media_type == "movie" and isdir(f"{folder}/{file}"):
-                return find_source(name, media_type, f"{folder}/{file}")
-            return f"{folder}/{file}"
+    match = find_match(name, folder)
+    if match:
+        if media_type == "movie" and isdir(f"{folder}/{match}"):
+            return find_source(name, media_type, f"{folder}/{match}")
+        return f"{folder}/{match}"
 
     print("Source not found")
     exit(1)
@@ -92,6 +99,19 @@ def folder_episodes(
     return [ft for _, ft in from_to]
 
 
+def get_media(name: str, media_type: SearchType) -> Media:
+    """Try to get media information locally first, then fall back to searching TMDB."""
+    if media_type == "tv":
+        match = find_match(name, TV_PATH)
+        if match:
+            parsed = re.match(r"(.+?)\s+\((\d{4})\)\s+\[tmdbid-(\d+)\]", match)
+            if parsed:
+                title, year, tmdbid = parsed.groups()
+                print(f"Found locally: {match}")
+                return Media(id=int(tmdbid), title=title, release_date=f"{year}-01-01")
+    return search_media(name, media_type)
+
+
 def main():
     if len(argv) < 3:
         print(__doc__)
@@ -122,7 +142,7 @@ def main():
         source = find_source(name, media_type)
         print("Source: ", source)
 
-    media = search_media(name, media_type)
+    media = get_media(name, media_type)
 
     # Handle : since it's not allowed in file names
     media.title = media.title.replace(":", REPLACE_CHAR)
