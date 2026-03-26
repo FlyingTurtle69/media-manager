@@ -83,7 +83,7 @@ def folder_episodes(
 ) -> list[tuple[str, str]]:
     files = listdir(source_folder)
     from_to = []
-    regex = re.compile(r"(?:E(\d{2})|\[(\d{2})\]| (\d{2}) )")
+    regex = re.compile(r"(?:EP(\d{2})|E(\d{2})|\[(\d{2})\]| (\d{2}) )")
     for file in files:
         match = regex.search(file)
         if match:
