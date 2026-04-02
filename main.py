@@ -78,26 +78,61 @@ def episode_path(
     )
 
 
+def parse_season(path: Path, default_season: int) -> tuple[int, bool]:
+    search_str = f"{path.parent.name} {path.name}".lower()
+    
+    if re.search(r'\b(ova|special|sp|ncop|nced)(?:\d+|\b)', search_str):
+        return 0, True
+        
+    season_match = re.search(r'\b(?:season\s*|s)(\d+)', search_str)
+    if season_match:
+        return int(season_match.group(1)), False
+        
+    return default_season, False
+
+
 def folder_episodes(
-    source_folder: str, dest_folder: str, media_title: str, season: int, shift: int = 0
+    source_folder: str, dest_folder_base: str, media_title: str, default_season: int, shift: int = 0
 ) -> list[tuple[str, str]]:
-    files = listdir(source_folder)
+    source_path = Path(source_folder)
     from_to = []
-    regex = re.compile(r"(?:EP(\d{2})|E(\d{2})|\[(\d{2})\]| (\d{2}) )")
-    for file in files:
-        match = regex.search(file)
-        if match:
-            episode = int(next(g for g in match.groups() if g is not None)) + shift
-            path = episode_path(
-                f"{source_folder}/{file}",
-                dest_folder,
-                media_title,
-                season,
-                episode,
-            )
-            from_to.append((episode, path))
-    from_to.sort()
-    return [ft for _, ft in from_to]
+    regex = re.compile(r"(?:EP(\d{2})|E(\d{2})|\[(\d{2})\]| (\d{2}) )", re.IGNORECASE)
+    
+    # Sort files alphabetically to ensure consistent order, especially for interactive prompts
+    paths = sorted(list(source_path.rglob("*")))
+    
+    for path in paths:
+        if not path.is_file():
+            continue
+            
+        season, is_special = parse_season(path, default_season)
+        
+        episode = None
+        if is_special:
+            while True:
+                user_input = input(f"Special found: {path.name}\nEnter episode number (or 'skip' to ignore): ")
+                if user_input.lower() == 'skip':
+                    break
+                try:
+                    episode = int(user_input)
+                    break
+                except ValueError:
+                    print("Please enter a valid integer.")
+            if episode is None:
+                continue
+        else:
+            match = regex.search(path.name)
+            if match:
+                episode = int(next(g for g in match.groups() if g is not None)) + shift
+            else:
+                continue
+                
+        dest_folder = f"{dest_folder_base}/Season {season:02}"
+        _, to_path = episode_path(str(path), dest_folder, media_title, season, episode)
+        from_to.append((season, episode, str(path), to_path))
+        
+    from_to.sort(key=lambda x: (x[0], x[1]))
+    return [(ft[2], ft[3]) for ft in from_to]
 
 
 def get_media(name: str, media_type: SearchType) -> Media:
@@ -162,19 +197,19 @@ def main():
             )
         ]
     else:
-        dest_path = (
+        dest_path_base = (
             f"{TV_PATH}/{media.title} ({media.release_date[:4]}) [tmdbid-{media.id}]"
         )
-        if not isdir(dest_path):
-            print(f"This directory will be created: {dest_path}")
-        dest_path += f"/Season {season:02}"
-        if not isdir(dest_path):
-            print(f"This directory will be created: {dest_path}")
+        if not isdir(dest_path_base):
+            print(f"This directory will be created: {dest_path_base}")
 
         if episode is not None:
+            dest_path = f"{dest_path_base}/Season {season:02}"
+            if not isdir(dest_path):
+                print(f"This directory will be created: {dest_path}")
             from_to = [episode_path(source, dest_path, media.title, season, episode)]
         else:
-            from_to = folder_episodes(source, dest_path, media.title, season, shift)
+            from_to = folder_episodes(source, dest_path_base, media.title, season, shift)
 
     print(f"{len(from_to)} files to be copied:")
     for fro, to in from_to:
